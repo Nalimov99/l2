@@ -1,0 +1,15 @@
+1 Oct 9 12:00:00 cindy@example.com deferred 5
+1 Oct 9 12:00:00 cindy@example.com deferred 5
+2 Oct 9 13:00:00 cindy@example.com deferred 4
+3 Oct 9 14:00:00 cindy@example.com bounced 3
+2 Oct 10 12:00:00 andy@example.com deferred 2
+5 Oct 10 12:30:00 billy@example.com deferred 1
+2 Oct 10 13:00:00 andy@example.com deferred 6
+10 Oct 10 13:30:00 billy@example.com deferred 8
+9 Oct 10 14:00:00 andy@example.com bounced 9
+10 Oct 10 14:30:00 billy@example.com bounced 10
+b
+a
+b
+c
+A
