@@ -50,7 +50,7 @@ func main() {
 	dat, err := os.ReadFile(file)
 	if err != nil {
 		fmt.Printf("open %s: no such file or directory\n", file)
-		fmt.Println("usage: go run --flags . filepath")
+		fmt.Println("usage: go run . --flags filepath")
 		os.Exit(0)
 	}
 

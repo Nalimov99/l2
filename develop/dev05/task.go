@@ -1,5 +1,12 @@
 package main
 
+import (
+	"dev05/mangrep"
+	"flag"
+	"fmt"
+	"log"
+)
+
 /*
 === Утилита grep ===
 
@@ -19,5 +26,34 @@ package main
 */
 
 func main() {
+	A := flag.Int("A", -1, "-A=1")
+	B := flag.Int("B", -1, "-B=1")
+	C := flag.Int("C", -1, "-C=1")
+	c := flag.Bool("c", false, "-c")
+	i := flag.Bool("i", false, "-i")
+	v := flag.Bool("v", false, "-v")
+	F := flag.Bool("F", false, "-F")
+	n := flag.Bool("n", false, "-n")
+	flag.Parse()
+	pattern := flag.Arg(0)
+	filepath := flag.Arg(1)
+	g := mangrep.Grep{
+		Path:    filepath,
+		Pattern: pattern,
+		GrepFlags: mangrep.GrepFlags{
+			A:     *A,
+			B:     *B,
+			C:     *C,
+			Count: *c,
+			I:     *i,
+			V:     *v,
+			F:     *F,
+			N:     *n,
+		},
+	}
 
+	if err := g.Start(); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(g.Result())
 }
