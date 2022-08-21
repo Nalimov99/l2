@@ -1,5 +1,11 @@
 package main
 
+import (
+	"fmt"
+	"sort"
+	"strings"
+)
+
 /*
 === Поиск анаграмм по словарю ===
 
@@ -20,5 +26,53 @@ package main
 */
 
 func main() {
+	input := []string{
+		"абв", "вба", "бав", "БВА",
+		"непопал",
+		"пятак", "пятка", "пятка", "тяпка",
+		"листок", "слиток", "столик",
+	}
 
+	fmt.Println(FindAnagrams(input))
+}
+
+func FindAnagrams(input []string) *map[string][]string {
+	result := make(map[string][]string)
+	anagramUnique := make(map[string]map[string]bool)
+
+	for _, item := range input {
+		wordSlice := strings.Split(item, "")
+		sort.Strings(wordSlice)
+		word := strings.ToLower(strings.Join(wordSlice, ""))
+		item = strings.ToLower(item)
+
+		if _, ok := anagramUnique[word]; ok {
+			anagramUnique[word][item] = false
+			continue
+		}
+
+		anagramUnique[word] = make(map[string]bool)
+		anagramUnique[word][item] = true
+	}
+
+	for _, item := range anagramUnique {
+		if len(item) <= 1 {
+			continue
+		}
+
+		var firstAnagram string
+		slice := make([]string, 0, len(item))
+		for word, value := range item {
+			if value {
+				firstAnagram = word
+			}
+			slice = append(slice, word)
+		}
+
+		sort.Slice(slice, func(i, j int) bool {
+			return slice[i] > slice[j]
+		})
+		result[firstAnagram] = slice
+	}
+	return &result
 }
