@@ -1,5 +1,12 @@
 package main
 
+import (
+	"dev06/mancut"
+	"flag"
+	"fmt"
+	"log"
+)
+
 /*
 === Утилита cut ===
 
@@ -14,5 +21,25 @@ package main
 */
 
 func main() {
+	f := flag.Int("f", -1, "-f=1")
+	d := flag.String("d", "\t", "-d=\" \"")
+	s := flag.Bool("s", false, "-s")
+	flag.Parse()
+	filepath := flag.Arg(0)
 
+	m := mancut.Mancut{
+		Path: filepath,
+		CutFlags: mancut.CutFlags{
+			Delimiter: *d,
+			Field:     *f,
+			S:         *s,
+		},
+	}
+
+	res, err := m.Result()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(res)
 }
