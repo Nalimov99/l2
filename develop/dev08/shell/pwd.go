@@ -4,8 +4,8 @@ import "fmt"
 
 type pwd struct{}
 
-func (p *pwd) run(s *shell) error {
-	fmt.Println(s.currentDir)
+func (p *pwd) Run(s *shell) error {
+	fmt.Fprintln(*s.iowriter, s.currentDir)
 
 	return nil
 }

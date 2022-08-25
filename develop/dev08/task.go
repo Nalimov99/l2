@@ -1,6 +1,9 @@
 package main
 
-import "dev08/shell"
+import (
+	"dev08/shell"
+	"os"
+)
 
 /*
 === Взаимодействие с ОС ===
@@ -10,12 +13,8 @@ import "dev08/shell"
 встроенные команды: cd/pwd/echo/kill/ps
 поддержать fork/exec команды
 конвеер на пайпах
-
-Реализовать утилиту netcat (nc) клиент
-принимать данные из stdin и отправлять в соединение (tcp/udp)
-Программа должна проходить все тесты. Код должен проходить проверки go vet и golint.
 */
 
 func main() {
-	shell.StartShell()
+	shell.StartShell(os.Stdin, os.Stdout)
 }

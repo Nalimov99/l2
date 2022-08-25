@@ -3,14 +3,17 @@ package shell
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
 )
 
 type execCmd interface {
-	run(*shell) error
+	Run(*shell) error
 }
 
 type shell struct {
@@ -19,12 +22,14 @@ type shell struct {
 	commands       map[string]execCmd
 	currentCommand string
 	splittedComand []string
+	ioreader       *io.Reader
+	iowriter       *io.Writer
 }
 
-func StartShell() error {
+func StartShell(ioreader io.Reader, iowriter io.Writer) (*shell, error) {
 	currentDir, err := filepath.Abs(".")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	commands := make(map[string]execCmd)
@@ -36,27 +41,51 @@ func StartShell() error {
 
 	s := shell{
 		currentDir: currentDir,
-		reader:     bufio.NewReader(os.Stdin),
+		reader:     bufio.NewReader(ioreader),
 		commands:   commands,
+		ioreader:   &ioreader,
+		iowriter:   &iowriter,
 	}
+	go s.stopShell()
+
 	s.read()
-	return nil
+	return &s, nil
+}
+
+func (s *shell) stopShell() {
+	q := make(chan os.Signal, 1)
+	signal.Notify(q, os.Interrupt, syscall.SIGTERM)
+	for {
+		<-q
+		fmt.Fprintln(*s.iowriter, "\nЕсли хотите завершить shell пропишите: \\quit")
+	}
+}
+
+func (s *shell) SetCurrentDir(dir string) {
+	s.currentDir = dir
+}
+
+func (s *shell) Commands() map[string]execCmd {
+	return s.commands
+}
+
+func (s *shell) CurrentDir() string {
+	return s.currentDir
 }
 
 func (s *shell) read() {
-	fmt.Print(">> ")
+	fmt.Fprint(*s.iowriter, ">> ")
 	text, err := s.reader.ReadString('\n')
 	if err != nil {
-		fmt.Println(err)
-		defer s.read()
+		fmt.Fprint(*s.iowriter, err)
 		return
 	}
 
 	s.currentCommand = text
-	s.execute()
+	s.Execute()
 }
 
-func (s *shell) execute() {
+func (s *shell) Execute() {
 	s.currentCommand = strings.TrimSpace(s.currentCommand)
 	s.currentCommand = strings.ToLower(s.currentCommand)
 	whitespaces := regexp.MustCompile(`\s+`)
@@ -68,8 +97,8 @@ func (s *shell) execute() {
 
 	s.splittedComand = strings.Split(s.currentCommand, " ")
 	if runner, ok := s.commands[s.splittedComand[0]]; ok {
-		if err := runner.run(s); err != nil {
-			fmt.Println(err)
+		if err := runner.Run(s); err != nil {
+			fmt.Fprintln(*s.iowriter, err)
 		}
 	}
 

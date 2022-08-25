@@ -2,6 +2,7 @@ package shell
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path"
 )
@@ -12,7 +13,12 @@ var (
 
 type cd struct{}
 
-func (c *cd) run(s *shell) error {
+func (c *cd) Run(s *shell) error {
+	if len(s.splittedComand) == 1 {
+		fmt.Fprintln(*s.iowriter, "usage: cd ...")
+		return nil
+	}
+
 	switch s.splittedComand[1] {
 	case "./..":
 		s.currentDir = path.Dir(s.currentDir)

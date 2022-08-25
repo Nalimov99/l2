@@ -10,7 +10,7 @@ import (
 
 type ps struct{}
 
-func (p *ps) run(s *shell) error {
+func (p *ps) Run(s *shell) error {
 	d, err := os.Open("/proc")
 	if err != nil {
 		return err
@@ -27,13 +27,10 @@ func (p *ps) run(s *shell) error {
 		}
 
 		for _, name := range names {
-			// We only care if the name starts with a numeric
 			if name[0] < '0' || name[0] > '9' {
 				continue
 			}
 
-			// From this point forward, any errors we just ignore, because
-			// it might simply be that the process doesn't exist anymore.
 			pid, err := strconv.ParseInt(name, 10, 0)
 			if err != nil {
 				continue
@@ -48,7 +45,7 @@ func (p *ps) run(s *shell) error {
 				continue
 			}
 
-			fmt.Printf("%s %d\n", string(contents), int(pid))
+			fmt.Fprintf(*s.iowriter, "%s %d\n", string(contents), int(pid))
 		}
 	}
 

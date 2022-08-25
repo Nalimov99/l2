@@ -7,8 +7,8 @@ import (
 
 type echo struct{}
 
-func (e *echo) run(s *shell) error {
-	fmt.Println(strings.Join(s.splittedComand[1:], " "))
+func (e *echo) Run(s *shell) error {
+	fmt.Fprint(*s.iowriter, strings.Join(s.splittedComand[1:], " "))
 
 	return nil
 }
