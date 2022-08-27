@@ -1,5 +1,11 @@
 package main
 
+import (
+	"dev09/wget"
+	"flag"
+	"fmt"
+)
+
 /*
 === Утилита wget ===
 
@@ -9,5 +15,10 @@ package main
 */
 
 func main() {
+	r := flag.Bool("r", false, "-r")
+	flag.Parse()
 
+	if _, err := wget.NewWget(flag.Arg(0), wget.Flags{R: *r}); err != nil {
+		fmt.Println(err)
+	}
 }
