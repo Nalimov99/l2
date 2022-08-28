@@ -1,5 +1,14 @@
 package main
 
+import (
+	"dev10/client"
+	"flag"
+	"fmt"
+	"net"
+	"os"
+	"time"
+)
+
 /*
 === Утилита telnet ===
 
@@ -16,5 +25,13 @@ go-telnet --timeout=10s host port go-telnet mysite.ru 8080 go-telnet --timeout=3
 */
 
 func main() {
+	timeout := flag.Duration("timeout", time.Second*10, "--timeout=10s")
+	flag.Parse()
 
+	host := flag.Arg(0)
+	port := flag.Arg(1)
+
+	if err := client.NewTelnet(net.JoinHostPort(host, port), *timeout, os.Stdin, os.Stdout); err != nil {
+		fmt.Println(err)
+	}
 }
