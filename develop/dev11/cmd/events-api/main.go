@@ -1,5 +1,12 @@
 package main
 
+import (
+	"dev11/cmd/events-api/internal/handlers"
+	"log"
+	"net/http"
+	"os"
+)
+
 /*
 === HTTP server ===
 
@@ -23,5 +30,15 @@ package main
 */
 
 func main() {
+	log.Println("main : Started")
+	defer log.Println("main : Completed")
 
+	log := log.New(os.Stdout, "EVENTS:", log.LstdFlags|log.Lshortfile)
+
+	api := http.Server{
+		Addr:    ":3020",
+		Handler: handlers.API(log),
+	}
+
+	api.ListenAndServe()
 }
