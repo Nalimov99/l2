@@ -1,10 +1,12 @@
 package event
 
-import "sync"
+import (
+	"sync"
+)
 
-// NewUserStore знает как заиницилазировать пусто UserStore
+// NewUserStore knows how to construct internal state for an NewUserStore
 func NewUsersStore() *UserStore {
-	users := make(map[int]User)
+	users := make(map[int]*User)
 
 	return &UserStore{
 		mu:    sync.RWMutex{},
@@ -12,33 +14,40 @@ func NewUsersStore() *UserStore {
 	}
 }
 
-// User возвращает пользователя из хранилища.
-// Если пользователь не находиться в хранилище, то
-// вторым значением вернет false.
+// User knows how to retrieve User from UsersStore
+// If specified user was not exists in the store,
+// it will return false in the second argument
 func (us *UserStore) User(id int) (*User, bool) {
 	us.mu.RLock()
 	defer us.mu.RUnlock()
 
 	val, ok := us.Store[id]
 
-	return &val, ok
+	return val, ok
 }
 
-// SetUser знает как записать нового пользователя в хранилище.
-// Перед вызовом SetUser, необходимо удостовериться что пользователь
-// не записан в хранилище, иначе данные старого пользователя удаляться.
-func (us *UserStore) SetUser(u User) {
+// SetUser knows how to set User into the UsersStore
+func (us *UserStore) SetUser(u *User) *User {
 	us.mu.Lock()
 	defer us.mu.Unlock()
 
 	us.Store[u.ID] = u
+
+	return u
 }
 
-// NewUser знает как заиницилизировать пользователя с пустым списком мероприятий.
-func NewUser(id int) User {
-	return User{
-		mu:     &sync.RWMutex{},
+// NewUser knows how to construct internal state for an User
+func NewUser(id int) *User {
+	return &User{
+		mu:     sync.RWMutex{},
 		ID:     id,
-		Events: []int{},
+		Events: []*Event{},
 	}
+}
+
+func (u *User) SetUserEvent(event *Event) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	u.Events = append(u.Events, event)
 }

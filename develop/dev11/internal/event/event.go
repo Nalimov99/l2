@@ -5,31 +5,29 @@ import (
 	"time"
 )
 
-// NewEventsStore знает как заинициализировать пустое
-// хранилище для мероприятий
+// NewEventsStore knows how to construct internal state for an EventsStore
 func NewEventsStore() *EventsStore {
 	return &EventsStore{
 		mu:        sync.RWMutex{},
 		LastIndex: 1,
-		Store:     map[int]Event{},
+		Store:     map[int]*Event{},
 	}
 }
 
-// Event возвращает мероприятие из хранилища.
-// Если мероприятие не найдено, то вторым значением возвращает false
+// Event knows how to retrieve id from EventsStore.
+// If the value was not found it will return false
 func (es *EventsStore) Event(id int) (*Event, bool) {
 	es.mu.RLock()
-	defer es.mu.Unlock()
+	defer es.mu.RUnlock()
 
 	val, ok := es.Store[id]
 
-	return &val, ok
+	return val, ok
 }
 
-// SetEvent знает как сохранить мероприятие в хранилище.
-// Если в меропритие уже существует в хранилище, то данные старого мероприятия затруться
-// Возвращаемым значением являеться ID созданного мероприятия
-func (es *EventsStore) SetEvent(event Event) int {
+// SetEvent knows how to write new Event into the EventsStore
+// Return value is id of created Event
+func (es *EventsStore) SetEvent(event *Event) {
 	es.mu.Lock()
 	defer es.mu.Unlock()
 
@@ -37,11 +35,16 @@ func (es *EventsStore) SetEvent(event Event) int {
 
 	es.Store[currentIdx] = event
 	es.LastIndex++
-
-	return currentIdx
 }
 
-// DeleteEvent знает как удалить мероприятие из хранилища
+func (es *EventsStore) SetEventByID(event *Event, id int) {
+	es.mu.Lock()
+	defer es.mu.Unlock()
+
+	es.Store[id] = event
+}
+
+// DeleteEvent knows how to delete Event from EventsStore
 func (es *EventsStore) DeleteEvent(id int) {
 	es.mu.Lock()
 	defer es.mu.Unlock()
@@ -49,16 +52,16 @@ func (es *EventsStore) DeleteEvent(id int) {
 	delete(es.Store, id)
 }
 
-// NewEvent знает как инициализировать мероприятие
+// NewEvent  knows how to construct internal state for an Event
 func NewEvent(name string, date time.Time) *Event {
 	return &Event{
-		mu:   &sync.RWMutex{},
+		mu:   sync.RWMutex{},
 		Name: name,
 		Date: date,
 	}
 }
 
-// UpdateEvent знает как обновить данные мероприятия
+// UpdateEvent knows how to update the Event in the EventsStore
 func (e *Event) UpdateEvent(name string, date time.Time) {
 	e.mu.Lock()
 	defer e.mu.Unlock()

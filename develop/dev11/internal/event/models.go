@@ -5,30 +5,42 @@ import (
 	"time"
 )
 
-// User структура содержащая данные о пользователе
-// Events содержит набор мероприятий конкретного пользователя
+// User represents someone with Events
 type User struct {
-	ID     int   `json:"id"`
-	Events []int `json:"events"`
-	mu     *sync.RWMutex
+	mu     sync.RWMutex
+	ID     int      `json:"id"`
+	Events []*Event `json:"events"`
 }
 
-// UserStore знает все данные о всех известных пользователяй
+// UserStore contains all known users
 type UserStore struct {
-	Store map[int]User
+	Store map[int]*User
 	mu    sync.RWMutex
 }
 
-// Event данные мероприятия
+// Event represents event's data
 type Event struct {
+	mu   sync.RWMutex
 	Name string    `json:"name"`
 	Date time.Time `json:"date"`
-	mu   *sync.RWMutex
 }
 
-// EventsStore представляет из себя хранилище всех известных мероприятий
+// EventsStore contains all known Events
 type EventsStore struct {
 	LastIndex int
-	Store     map[int]Event
+	Store     map[int]*Event
 	mu        sync.RWMutex
+}
+
+// UpdateEvent contains information needed to upate the event
+type UpdateEvent struct {
+	ID        int
+	EventName HasValue[string]
+	Date      HasValue[time.Time]
+}
+
+// HasValue should use to define that the provided value was passed
+type HasValue[T any] struct {
+	Value T
+	Has   bool
 }
