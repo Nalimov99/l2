@@ -19,6 +19,29 @@ func main() {
 
 Ответ:
 ```
-...
-
+Output:
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+fatal error: all goroutines are asleep - deadlock!
 ```
+```go
+for n := range ch {
+	println(n)
+}
+// аналогичен
+for {
+	n, ok := <- ch
+	if !ok {
+		break
+	}
+}
+```
+Канал в данном случае не закрывается после выполнения цикла.
