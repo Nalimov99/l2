@@ -19,6 +19,9 @@ func API(log *log.Logger) http.Handler {
 	app.Handle(http.MethodPost, "/create_event", event.CreateEvent)
 	app.Handle(http.MethodPost, "/update_event", event.UpdateEvent)
 	app.Handle(http.MethodPost, "/delete_event", event.DeleteEvent)
+	app.Handle(http.MethodGet, "/events_for_day", event.EventsForDay)
+	app.Handle(http.MethodGet, "/events_for_week", event.EventsForWeek)
+	app.Handle(http.MethodGet, "/events_for_month", event.EventsForMonth)
 
 	return app
 }

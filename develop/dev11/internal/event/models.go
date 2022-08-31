@@ -20,9 +20,11 @@ type UserStore struct {
 
 // Event represents event's data
 type Event struct {
-	mu   sync.RWMutex
-	Name string    `json:"name"`
-	Date time.Time `json:"date"`
+	mu      sync.RWMutex
+	Name    string    `json:"name"`
+	Date    time.Time `json:"date"`
+	EventID int       `json:"event_id"`
+	UserID  int       `json:"-"`
 }
 
 // EventsStore contains all known Events

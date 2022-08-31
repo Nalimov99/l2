@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -40,12 +41,14 @@ func (e *Event) CreateEvent(ctx context.Context, w http.ResponseWriter, r *http.
 		return err
 	}
 
-	userID, err := strconv.Atoi(r.Form.Get("user_id"))
-	if err != nil || userID <= 0 {
+	var userID int
+	ok, err := web.ParseRequestIntParam(r, "user_id", &userID)
+	if err != nil || !ok || userID <= 0 {
 		return &ErrInvalidUserID
 	}
 
-	date, err := time.Parse(time.RFC3339, r.Form.Get("date"))
+	var date time.Time
+	_, err = web.ParseRequestDateParam(r, "date", &date)
 	if err != nil {
 		return &ErrInvalidDate
 	}
@@ -61,15 +64,17 @@ func (e *Event) UpdateEvent(ctx context.Context, w http.ResponseWriter, r *http.
 		return err
 	}
 
-	eventID, err := strconv.Atoi(r.Form.Get("event_id"))
-	if err != nil || eventID <= 0 {
+	var eventID int
+	ok, err := web.ParseRequestIntParam(r, "event_id", &eventID)
+	if err != nil || !ok || eventID <= 0 {
 		return &ErrInvalidEventID
 	}
+
 	eventName := r.Form.Get("name")
 	var date time.Time
 	hasDate := r.Form.Has("date")
 	if hasDate {
-		date, err = time.Parse(time.RFC3339, r.Form.Get("date"))
+		_, err = web.ParseRequestDateParam(r, "date", &date)
 		if err != nil {
 			return &ErrInvalidDate
 		}
@@ -100,12 +105,72 @@ func (e *Event) DeleteEvent(ctx context.Context, w http.ResponseWriter, r *http.
 		return err
 	}
 
-	eventID, err := strconv.Atoi(r.Form.Get("event_id"))
-	if err != nil || eventID <= 0 {
+	var eventID int
+	ok, err := web.ParseRequestIntParam(r, "event_id", &eventID)
+	if err != nil || !ok || eventID <= 0 {
 		return &ErrInvalidEventID
 	}
 
 	e.eventsFD.DeleteEvent(eventID)
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
+}
+
+func (e *Event) EventsForDay(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	userID, date, err := eventsParserHelper(r)
+	if err != nil {
+		return err
+	}
+
+	events := e.eventsFD.EventsForDuration(userID, date, 1, 0)
+
+	return web.Respond(ctx, w, web.CommonRespond[[]*event.Event]{Result: events}, http.StatusOK)
+}
+
+func (e *Event) EventsForWeek(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	userID, date, err := eventsParserHelper(r)
+	if err != nil {
+		return err
+	}
+
+	events := e.eventsFD.EventsForDuration(userID, date, 8, 0)
+
+	return web.Respond(ctx, w, web.CommonRespond[[]*event.Event]{Result: events}, http.StatusOK)
+}
+
+func (e *Event) EventsForMonth(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	userID, date, err := eventsParserHelper(r)
+	if err != nil {
+		return err
+	}
+
+	events := e.eventsFD.EventsForDuration(userID, date, 0, 1)
+
+	return web.Respond(ctx, w, web.CommonRespond[[]*event.Event]{Result: events}, http.StatusOK)
+}
+
+func eventsParserHelper(r *http.Request) (userID int, date time.Time, err error) {
+	m, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		return userID, date, err
+	}
+	rDate, ok := m["date"]
+	if !ok {
+		return userID, date, &ErrInvalidDate
+	}
+	rUserID, ok := m["user_id"]
+	if !ok {
+		return userID, date, &ErrInvalidUserID
+	}
+
+	userID, err = strconv.Atoi(rUserID[0])
+	if err != nil {
+		return userID, date, &ErrInvalidUserID
+	}
+	date, err = time.Parse("2006-01-02", rDate[0])
+	if err != nil {
+		return userID, date, &ErrInvalidDate
+	}
+
+	return userID, date, nil
 }

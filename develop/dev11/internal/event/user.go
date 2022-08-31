@@ -26,6 +26,14 @@ func (us *UserStore) User(id int) (*User, bool) {
 	return val, ok
 }
 
+// Users knows how to retrieve Store
+func (us *UserStore) Users() map[int]*User {
+	us.mu.RLock()
+	defer us.mu.RUnlock()
+
+	return us.Store
+}
+
 // SetUser knows how to set User into the UsersStore
 func (us *UserStore) SetUser(u *User) *User {
 	us.mu.Lock()
@@ -50,4 +58,29 @@ func (u *User) SetUserEvent(event *Event) {
 	defer u.mu.Unlock()
 
 	u.Events = append(u.Events, event)
+}
+
+func (us *UserStore) DeleteUserEvent(userID, eventID int) {
+	user, ok := us.User(userID)
+	if !ok {
+		return
+	}
+
+	user.mu.RLock()
+	var elemIdx int
+
+	for i, event := range user.Events {
+		if event.EventID == eventID {
+			elemIdx = i
+			break
+		}
+	}
+
+	newEvents := make([]*Event, 0)
+	newEvents = append(newEvents, user.Events[:elemIdx]...)
+	newEvents = append(newEvents, user.Events[elemIdx+1:]...)
+	user.mu.RUnlock()
+	user.mu.Lock()
+	user.Events = newEvents
+	user.mu.Unlock()
 }

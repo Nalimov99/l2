@@ -6,6 +6,10 @@ import (
 	"net/http"
 )
 
+type CommonRespond[T any] struct {
+	Result T `json:"result"`
+}
+
 // Respond marshals value to a JSON and send it to the client
 func Respond(ctx context.Context, w http.ResponseWriter, val interface{}, statusCode int) error {
 	v, ok := ctx.Value(KeyValues).(*ContexValues)

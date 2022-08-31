@@ -2,6 +2,7 @@ package main
 
 import (
 	"dev11/cmd/events-api/internal/handlers"
+	"dev11/internal/config"
 	"log"
 	"net/http"
 	"os"
@@ -33,10 +34,12 @@ func main() {
 	log.Println("main : Started")
 	defer log.Println("main : Completed")
 
+	cfg := config.Config()
+
 	log := log.New(os.Stdout, "EVENTS:", log.LstdFlags|log.Lshortfile)
 
 	api := http.Server{
-		Addr:    ":3020",
+		Addr:    cfg.Port,
 		Handler: handlers.API(log),
 	}
 

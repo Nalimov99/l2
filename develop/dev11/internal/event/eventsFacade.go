@@ -27,7 +27,7 @@ func (ef *EventsFacade) SetUserEvent(userID int, date time.Time, eventName strin
 	}
 
 	event := NewEvent(eventName, date)
-	ef.Events.SetEvent(event)
+	ef.Events.SetEvent(event, userID)
 
 	user.SetUserEvent(event)
 	return user
@@ -56,5 +56,32 @@ func (ef *EventsFacade) UpdateEvent(updateEvent UpdateEvent) *Event {
 }
 
 func (ef *EventsFacade) DeleteEvent(id int) {
-	ef.Events.DeleteEvent(id)
+	eventID, userID, ok := ef.Events.DeleteEvent(id)
+	if !ok {
+		return
+	}
+
+	ef.Users.DeleteUserEvent(userID, eventID)
+}
+
+func (ef *EventsFacade) EventsForDuration(userID int, date time.Time, addDays, addMonths int) []*Event {
+	res := []*Event{}
+	lastDay := date.AddDate(0, addMonths, addDays)
+	firstDate := date.AddDate(0, 0, -1)
+
+	user, ok := ef.Users.User(userID)
+	if !ok {
+		return res
+	}
+
+	user.mu.RLock()
+	defer user.mu.RUnlock()
+
+	for _, event := range user.Events {
+		if event.Date.Before(lastDay) && event.Date.After(firstDate) {
+			res = append(res, event)
+		}
+	}
+
+	return res
 }

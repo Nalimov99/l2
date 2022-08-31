@@ -25,13 +25,23 @@ func (es *EventsStore) Event(id int) (*Event, bool) {
 	return val, ok
 }
 
+// Events knows how to retrieve Store
+func (es *EventsStore) Events() map[int]*Event {
+	es.mu.RLock()
+	defer es.mu.RUnlock()
+
+	return es.Store
+}
+
 // SetEvent knows how to write new Event into the EventsStore
 // Return value is id of created Event
-func (es *EventsStore) SetEvent(event *Event) {
+func (es *EventsStore) SetEvent(event *Event, userID int) {
 	es.mu.Lock()
 	defer es.mu.Unlock()
 
 	currentIdx := es.LastIndex
+	event.EventID = currentIdx
+	event.UserID = userID
 
 	es.Store[currentIdx] = event
 	es.LastIndex++
@@ -45,11 +55,17 @@ func (es *EventsStore) SetEventByID(event *Event, id int) {
 }
 
 // DeleteEvent knows how to delete Event from EventsStore
-func (es *EventsStore) DeleteEvent(id int) {
-	es.mu.Lock()
-	defer es.mu.Unlock()
+// It will return event_id and user_id of deleted elemnt
+func (es *EventsStore) DeleteEvent(id int) (eventID int, userID int, ok bool) {
+	event, ok := es.Event(id)
+	if !ok {
+		return eventID, userID, ok
+	}
 
+	es.mu.Lock()
 	delete(es.Store, id)
+	es.mu.Unlock()
+	return event.EventID, event.UserID, true
 }
 
 // NewEvent  knows how to construct internal state for an Event
